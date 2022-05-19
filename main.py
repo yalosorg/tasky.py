@@ -4,8 +4,8 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from keyboards import kb_task_length
 from datetime import datetime
-from reminder import Reminder, Task
-from threading import Thread
+from reminder import Reminder, Task, Database
+from threading import Thread, Lock
 import asyncio
 
 bot = Bot(token = '')
@@ -32,6 +32,30 @@ async def init(_):
 @dp.message_handler(commands = ['start'])
 async def start(message: types.Message):
     await message.answer('Привет!\nЯ - бот для таск менеджмента, буду напоминать тебе о твоих задачах!')
+
+
+@dp.message_handler(commands = ['tasks'])
+async def tasks(message: types.Message):
+    db = Database()
+    tasks = db.get_tasks()
+    # sort tasks by user id
+    now = datetime.now()
+
+    await bot.send_message(message.chat.id, 'Ниже будут все ваши задачи')
+
+    for task in tasks:
+        formatted = datetime.strptime(task.date, '%Y-%m-%d %H:%M:%S')
+        if message.chat.id == task.user:
+            print('how many times')
+            print(now - formatted)
+            if task.length == 1 and (now - formatted).days >= 0:
+                await bot.send_message(message.chat.id, f'Ваша задача, которую вы должны выполнить за следующие сутки:\n{task.description}')
+            elif task.length == 1 and (now - formatted).days == -1:
+                await bot.send_message(message.chat.id, f'Ваша задача на ближайшие сутки начиная с {str(task.date)}:\n{task.description}')
+            elif task.length == 2 and (now - formatted).days >= 30:
+                await bot.send_message(message.chat.id, f'Ваше задача до конца этого месяца:\n${task.description}')
+            elif task.length == 3 and (now - formatted).days >= 365:
+                await bot.send_message(message.chat.id, f'Ваша задача до конца этого года:\n${task.description}')
 
 
 @dp.message_handler(commands = ['newtask'])
