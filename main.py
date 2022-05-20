@@ -8,9 +8,15 @@ from reminder import Reminder, Task, Database
 from threading import Thread, Lock
 import asyncio
 
-bot = Bot(token = '')
+bot = Bot(token = '5303297646:AAHN9XQ83qyyXndZgSUrgBupw5hhMxh4Nz0')
 dp = Dispatcher(bot, storage = MemoryStorage())
 reminder = Reminder(bot, 'tasks.db')
+LOGGING = True
+
+
+def log(taskid, description, date, length, user):
+    if LOGGING:
+        print(f'{taskid} {description} {date} {length} {user}')
 
 
 class DateInput(StatesGroup):
@@ -145,13 +151,21 @@ async def year_selected(message: types.Message, state: FSMContext):
     raw_date = splitted[0]
     splitted.pop(0)
     description = '\n'.join(splitted)
-    date = datetime.strptime(raw_date, '%Y')
+    try:
+        date = datetime.strptime(f'01-{raw_date}', '%m-%Y')
+    except:
+        await message.answer('Не удалось распознать дату')
+        return
+
+    id = reminder.db.free_id()
 
     try:
-        reminder.db.insert_task(id, description, str(date), 2, message.chat.id)
+        log(id, description, str(date), 3, message.chat.id)
+        reminder.db.insert_task(id, description, str(date), 3, message.chat.id)
         await message.answer('Запомнил!')
-    except:
-        await message.answer('Не возможно распознать дату')
+    except Exception as e:
+        raise e
+        await message.answer('Что-то пошло не так :(')
     finally:
         await state.finish()
 

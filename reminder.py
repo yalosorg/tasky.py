@@ -18,7 +18,7 @@ class Database:
             conn = sqlite3.connect(self.name)
             cursor = conn.cursor()
 
-            cursor.execute('''CREATE TABLE IF NOT EXISTS tasks(taskid INT, description TEXT, date TEXT, length INT, user INT)''')
+            cursor.execute('''CREATE TABLE IF NOT EXISTS tasks (taskid INT, description TEXT, datetime TEXT, length INT, user INT)''')
 
             conn.commit()
             conn.close()
@@ -33,7 +33,8 @@ class Database:
             conn = sqlite3.connect(self.name)
             cursor = conn.cursor()
 
-            cursor.execute(f'''INSERT INTO tasks VALUES({taskid}, '{description}', '{date}', {length}, {user})''')
+            cursor.execute(f'''INSERT INTO tasks VALUES ({taskid}, '{description}', '{date}', {length}, {user});''')
+            #cursor.execute('INSERT INTO tasks VALUES (?, ?, ?, ?, ?)', ())
 
             conn.commit()
             conn.close()
